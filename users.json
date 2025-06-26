@@ -1,0 +1,18 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Alice",
+      "email": "alice@mail.com",
+      "phone": "123-456-7890",
+      "company": "Tech Corp"
+    },
+    {
+      "id": 2,
+      "name": "Bob",
+      "email": "bob@mail.com",
+      "phone": "987-654-3210",
+      "company": "Business Inc"
+    }
+  ]
+}

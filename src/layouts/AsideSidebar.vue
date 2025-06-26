@@ -85,6 +85,11 @@ const menuItems = ref([
     isDropdown: true,
     children: [{ text: "eCommerce", link: "index.html", active: true }],
   },
+   {
+    text: "Table master",
+    icon: "mdi mdi-view-dashboard",
+    link: "tablemaster",
+  },
   {
     text: "Pages",
     icon: "mdi mdi-file-document-outline",

@@ -6,7 +6,7 @@
   </div>
 
   <div class="card-style">
-    <h2 class="mb-4">{{ isInsertMode ? 'Insert' : 'Update' }} {{ title }}</h2>
+    <h2 class="mb-4">{{ title }}</h2>
 
     <form @submit.prevent="handleSubmit">
       <div
@@ -84,7 +84,7 @@ onMounted(async () => {
   if (!isInsertMode.value && props.id) {
     try {
       const res = await axios.get(apiUrls.value.getOne)
-      const data = res.data
+      const data = res.data.data
       props.formSchema.forEach(field => {
         form.value[field.model] = data[field.model] || ''
       })
@@ -97,9 +97,11 @@ onMounted(async () => {
 const handleSubmit = async () => {
   try {
     if (isInsertMode.value) {
+      form.value._method = 'post'
       await axios.post(apiUrls.value.insert, form.value)
     } else {
-      await axios.put(apiUrls.value.update, form.value)
+      form.value._method = 'put'
+      await axios.post(apiUrls.value.update, form.value)
     }
     alert('Success!')
     router.push(parentPath.value)

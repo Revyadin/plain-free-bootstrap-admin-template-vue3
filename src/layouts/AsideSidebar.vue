@@ -73,9 +73,9 @@ function toggleMenu(menuText) {
 // Menu item list
 const menuItems = ref([
   {
-    text: "Etalase",
+    text: "Penjualan",
     icon: "mdi mdi-store",
-    link: "etalase",
+    link: "penjualan",
     active: false,
   },
   { divider: true },

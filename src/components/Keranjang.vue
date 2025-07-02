@@ -23,7 +23,7 @@
             <td>
               <input type="number"
                      class="form-control form-control-sm"
-                     v-model.number="item.jumlah"
+                     v-model.number="item.quantity"
                      min="1"
                      style="width: 70px;"
                      @change="onUpdate(item)" />
@@ -31,7 +31,7 @@
             <td>
               <input type="number"
                      class="form-control form-control-sm"
-                     v-model.number="item.potongan"
+                     v-model.number="item.discount"
                      min="0" max="100"
                      style="width: 60px;"
                      @change="onUpdate(item)" />
@@ -99,7 +99,14 @@ const props = defineProps({
   items: Array
 })
 
-const emit = defineEmits(['update:items', 'update', 'delete', 'refresh'])
+const emit = defineEmits([
+  'update:items', 
+  'update', 
+  'delete', 
+  'refresh',
+  'checkout' // tambahkan ini
+])
+
 
 const localItems = ref([...props.items])
 
@@ -122,19 +129,19 @@ const formatCurrency = (val) =>
 
 // Hitung total item
 const hitungTotalItem = (item) => {
-  const hargaTotal = item.hargajualecer * item.jumlah
-  const potongan = (item.potongan || 0) / 100 * hargaTotal
+  const hargaTotal = item.unit_price * item.quantity
+  const potongan = (item.discount || 0) / 100 * hargaTotal
   return hargaTotal - potongan
 }
 
 // Computed grand total
 const grandTotal = computed(() =>
-  localItems.value.reduce((sum, item) => sum + (item.hargajualecer * item.jumlah), 0)
+  localItems.value.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0)
 )
 
 const totalDiskon = computed(() =>
   localItems.value.reduce((sum, item) => {
-    const diskon = (item.potongan || 0) / 100 * (item.hargajualecer * item.jumlah)
+    const diskon = (item.discount || 0) / 100 * (item.unit_price * item.quantity)
     return sum + diskon
   }, 0)
 )
@@ -150,41 +157,13 @@ const kembalian = computed(() => {
 })
 
 // Checkout logic
-const checkout = async () => {
-  if (totalBayar.value > bayarTunai.value + bayarNonTunai.value) {
-    Swal.fire('Gagal', 'Jumlah pembayaran tidak cukup.', 'error')
-    return
-  }
-
-  const confirm = await Swal.fire({
-    title: 'Konfirmasi Checkout',
-    html: `
-      <p>Total Bayar: <b>${formatCurrency(totalBayar.value)}</b></p>
-      <p>Tunai: <b>${formatCurrency(bayarTunai.value)}</b></p>
-      <p>Non-Tunai: <b>${formatCurrency(bayarNonTunai.value)}</b></p>
-    `,
-    icon: 'info',
-    showCancelButton: true,
-    confirmButtonText: 'Ya, Checkout',
-    cancelButtonText: 'Batal'
+const checkout = () => {
+  emit('checkout', {
+    tunai: bayarTunai.value,
+    nontunai: bayarNonTunai.value,
+    total: totalBayar.value,
+    kembalian: kembalian.value
   })
-
-  if (!confirm.isConfirmed) return
-
-  try {
-    await axios.post(`/api/keranjang/checkout`, {
-      uang: bayarTunai.value,
-      nontunai: bayarNonTunai.value,
-      username: 'user123',
-      status: 1
-    })
-    Swal.fire('Berhasil', 'Transaksi berhasil diselesaikan.', 'success')
-    bayarTunai.value = 0
-    bayarNonTunai.value = 0
-    emit('refresh') // untuk fetch ulang dari parent
-  } catch (error) {
-    console.error('Gagal checkout:', error)
-    Swal.fire('Gagal', 'Terjadi kesalahan saat checkout.', 'error')
-  }
 }
+
 </script>

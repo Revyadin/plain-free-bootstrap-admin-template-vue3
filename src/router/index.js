@@ -7,7 +7,7 @@ import About from '../pages/About/index.vue'
 import TableMaster from '../pages/TableMaster/index.vue'
 
 // Lazy Load Pages
-const Etalase = () => import('../pages/Etalase/index.vue')
+const Transaksi = () => import('../pages/Transaksi/index.vue')
 const Supplier = () => import('../pages/Supplier/index.vue')
 const Users = () => import('../pages/Users/index.vue')
 const Products = () => import('../pages/Products/index.vue')
@@ -52,13 +52,14 @@ const routes = [
     }
   },
   {
-    path: '/etalase',
-    name: 'Etalase',
-    component: Etalase,
+    path: '/penjualan',
+    name: 'Penjualan',
+    component: Transaksi,
     meta: {
-      title: 'Etalase',
+      title: 'Penjualan',
       layout: 'default',
-      requiresAuth: true
+      requiresAuth: true,
+      transactionType: 'SALE'
     }
   },
 

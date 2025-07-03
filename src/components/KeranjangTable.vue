@@ -5,17 +5,19 @@
       Transaksi ditampilkan sebagai badge. Klik tombol aksi untuk melihat atau mengelola transaksi.
     </p>
 
-    <div v-if="localItems.length === 0" class="text-center text-sm text-muted">
-      Tidak ada transaksi ditemukan.
+    <div v-if="localItems.length === 0" class="text-center text-sm text-muted py-5">
+      <p class="mb-3">Tidak ada transaksi ditemukan.</p>
+      <button class="btn btn-outline-primary btn-sm" @click="$emit('create')">
+        ➕ Buat Transaksi Baru
+      </button>
+
     </div>
 
+
     <div v-else class="badges-group d-flex flex-column gap-2 clickable-badge-card">
-      <div
-        v-for="(item, index) in localItems"
-        :key="item.id"
+      <div v-for="(item, index) in localItems" :key="item.id"
         class="d-flex justify-content-between align-items-center p-2 border rounded bg-light"
-        @click="$emit('detailcart', item.id)"
-      >
+        @click="$emit('detailcart', item.id)">
         <div>
           <h6 class="mb-1">#{{ index + 1 }} - {{ formatDate(item.created_at) }}</h6>
           <span :class="['main-badge', 'badge-sm', getStatusBadge(item.status)]">
@@ -39,6 +41,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits([
+  'create',
   'detailcart',
   'delete'
 ])
@@ -84,4 +87,3 @@ const getStatusBadge = (status) => {
   transform: scale(0.98);
 }
 </style>
-

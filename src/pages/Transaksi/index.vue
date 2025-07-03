@@ -11,7 +11,7 @@
 
       <!-- KANAN: Keranjang -->
       <div class="col-md-12 col-lg-8 col-xl-12 col-xxl-8">
-        <KeranjangTable v-model:items="cart" @detailcart="handdleDetailCart" @delete="handleDeleteAll" />
+        <KeranjangTable v-model:items="cart" @detailcart="handdleDetailCart" @delete="handleDeleteAll" @create="handdleAddCart" />
         <Keranjang v-model:items="detailcart" @update="handleUpdateItem" @delete="handleDeleteItem"
           @refresh="fetchKeranjang" @checkout="handleCheckout" />
 
@@ -43,6 +43,7 @@ const keranjang = ref([])
 const searchTerm = ref('')
 const cart = ref([])
 const detailcart = ref([])
+const selectedCart = ref(null)
 
 const formatCurrency = (val) =>
   new Intl.NumberFormat('id-ID', {
@@ -71,12 +72,28 @@ const fetchCart = async () => {
   }
 }
 
+// Create Cart
+const handdleAddCart = async (id) => {
+  try {
+    const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/transaksicart/cart`,{
+        "user_id": 1,
+        "transaction_type": mode.value,
+        "status": "DRAFT"
+    })
+    fetchCart()
+    // console.log(res.data.data.items)
+  } catch (error) {
+    console.error('Gagal fetch detail keranjang:', error)
+  }
+}
+
 // Detail Cart
 const handdleDetailCart = async (id) => {
   try {
     const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/transaksicart/cart/${id}/item`)
     detailcart.value = res.data.data.items || []
-    // console.log(res.data.data.items)
+    selectedCart.value = id
+    console.log(id)
   } catch (error) {
     console.error('Gagal fetch detail keranjang:', error)
   }
@@ -107,11 +124,20 @@ onMounted(() => {
 // Tambah produk ke keranjang
 const handleAddProduct = async (product) => {
   try {
-    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/transaksi/keranjang`, {
-      idbarang: product.idbarang,
-      mode: mode.value
+    if(selectedCart.value==null){
+      Swal.fire('Gagal', 'Transaksi belum dipilih', 'error')
+      return
+    }
+    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/transaksicart/cart/${selectedCart.value}/items`, {
+      "product_id": product.idbarang,
+      "warehouse_id": 1,
+      "quantity": 1,
+      "unit_price": product.hargajualecer,
+      "discount": 0,
+      "notes": ""
     })
     fetchKeranjang()
+    handdleDetailCart(selectedCart.value)
   } catch (e) {
     console.error('Gagal tambah produk:', e)
   }
@@ -215,6 +241,7 @@ const handleCheckout = async ({ tunai, nontunai, total, kembalian }) => {
     }
 
     let data = {
+      "transactionCartId": selectedCart.value,
       "reference_code": null,
       "transaction_type": mode.value,
       "date": moment().format('YYYY-MM-DD HH:mm:ss'),
@@ -228,7 +255,11 @@ const handleCheckout = async ({ tunai, nontunai, total, kembalian }) => {
 
     await axios.post(`${import.meta.env.VITE_API_BASE_URL}/transaksi/${mode.value}`, data)
     Swal.fire('Berhasil', 'Transaksi berhasil diselesaikan.', 'success')
-    fetchKeranjang()
+  .then(() => {
+    location.reload(true); // Hard reload (force reload from server)
+  });
+
+    
   } catch (e) {
     Swal.fire('Gagal', 'Terjadi kesalahan saat checkout.', 'error')
   }

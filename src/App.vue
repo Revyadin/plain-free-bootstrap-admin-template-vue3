@@ -1,6 +1,6 @@
 <template>
   <component :is="layoutComponent">
-    <router-view />
+    <router-view :key="route.fullPath" />
   </component>
 </template>
 
@@ -11,7 +11,7 @@ import { useRoute } from 'vue-router'
 import DefaultLayout from '@/layouts/DefaultLayout.vue'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 
-const route = useRoute()
+const route = useRoute() // <-- ini reactive secara otomatis di script setup
 
 const layoutMap = {
   default: DefaultLayout,

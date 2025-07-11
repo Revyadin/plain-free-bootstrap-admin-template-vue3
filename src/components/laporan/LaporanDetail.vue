@@ -47,8 +47,8 @@
                                     <img src="https://demo.plainadmin.com/assets/images/invoice/uideck-logo.svg" alt="">
                                 </div>
                                 <div class="invoice-date">
-                                    <p><span>Date :</span> {{ data.tanggal }}</p>
-                                    <p><span>ID:</span> {{ data.noNota }}</p>
+                                    <p><span>Date :</span> {{ data.date }}</p>
+                                    <p><span>ID:</span> {{ data.reference_code }}</p>
                                 </div>
                             </div>
                             <div class="invoice-address">
@@ -85,23 +85,23 @@
                                     <tbody>
                                         <tr v-for="(item, index) in data.items" :key="index">
                                             <td>
-                                                <p class="text-sm">{{ item.nama }}</p>
+                                                <p class="text-sm">{{ item.namabarang }}</p>
                                             </td>
                                             <td>
-                                                <p class="text-sm">{{ item.harga }}</p>
+                                                <p class="text-sm">{{ item.unit_price }}</p>
                                             </td>
                                             <td>
-                                                <p class="text-sm">{{ item.potongan }}</p>
+                                                <p class="text-sm">{{ item.discount }}</p>
                                             </td>
                                             <td>
-                                                <p class="text-sm">{{ item.qty }}</p>
+                                                <p class="text-sm">{{ item.quantity }}</p>
                                             </td>
                                             <td>
                                                 <p class="text-sm">{{ item.subtotal }}</p>
                                             </td>
                                         </tr>
 
-                                        <tr>
+                                        <!-- <tr>
                                             <td></td>
                                             <td></td>
                                             <td></td>
@@ -109,9 +109,9 @@
                                                 <h6 class="text-sm text-medium">Bayar</h6>
                                             </td>
                                             <td>
-                                                <h6 class="text-sm text-bold">{{ data.bayar }}</h6>
+                                                <h6 class="text-sm text-bold">{{ data.total_paid }}</h6>
                                             </td>
-                                        </tr>
+                                        </tr> -->
                                         <tr>
                                             <td></td>
                                             <td></td>
@@ -120,7 +120,7 @@
                                                 <h6 class="text-sm text-medium">Kembali</h6>
                                             </td>
                                             <td>
-                                                <h6 class="text-sm text-bold">{{ data.kembali }}</h6>
+                                                <h6 class="text-sm text-bold">{{ data.change_returned }}</h6>
                                             </td>
                                         </tr>
                                         <tr>
@@ -131,7 +131,7 @@
                                                 <h4>Total</h4>
                                             </td>
                                             <td>
-                                                <h4>{{ data.total }}</h4>
+                                                <h4>{{ data.total_paid }}</h4>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -205,9 +205,9 @@ const data = ref({
     noNota: '',
     tanggal: '',
     items: [],
-    total: 0,
+    total_paid: 0,
     bayar: 0,
-    kembali: 0,
+    change_returned: 0,
     footer: 'Terima kasih, kembali lagi ya!'
 })
 
@@ -252,19 +252,20 @@ const fetchData = async () => {
         const result = response.data.data.items
 
         // Ubah hasil dari backend ke struktur `data.value`
-        data.value.noNota = result.idnotapenjualan
-        data.value.tanggal = result.timestamp
-        data.value.user = result.user || 'Admin'
+        data.value.reference_code = result.reference_code
+        data.value.date = result.date
+        data.value.user = result.user || ' - '
         data.value.items = result.detail_penjualan.map(item => ({
-            nama: item.namabarang,
-            qty: parseInt(item.jumlah),
-            harga: parseFloat(item.hargajual),
-            potongan: parseFloat(item.potongan),
+            namabarang: item.namabarang,
+            quantity: parseInt(item.quantity),
+            unit_price: parseFloat(item.unit_price),
+            discount: parseFloat(item.discount),
+            tax: parseFloat(item.tax),
             subtotal: parseFloat(item.subtotal)
         }))
-        data.value.total = parseFloat(result.totalpembayaran)
-        data.value.bayar = parseFloat(result.totalpembayarannontunai) + parseFloat(result.totalpembayaran)
-        data.value.kembali = data.value.bayar - data.value.total
+        data.value.total_paid = parseFloat(result.total_paid)
+        // data.value.bayar = parseFloat(result.total_paid) + parseFloat(result.change_returned)
+        data.value.change_returned = data.value.change_returned
 
         updateStruk()
     } catch (error) {

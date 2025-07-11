@@ -11,12 +11,16 @@
 
       <!-- KANAN: Keranjang -->
       <div class="col-md-12 col-lg-8 col-xl-12 col-xxl-8">
-        <KeranjangTable 
+        <!-- <KeranjangTable
+          v-if="!id" 
           v-model:items="cart" 
           @detailcart="handdleDetailCart" 
           @delete="handleDeleteAll" 
           @create="handdleAddCart"
-        />
+        /> -->
+        <!-- <pre>
+          {{ detailcart }}
+        </pre> -->
         <Keranjang 
           v-model:mode="mode" 
           v-model:items="detailcart" 
@@ -24,7 +28,6 @@
           @delete="handleDeleteItem"
           @checkout="handleCheckout" 
         />
-
       </div>
 
     </div>
@@ -53,7 +56,8 @@ const products = ref([])
 const searchTerm = ref('')
 const cart = ref([])
 const detailcart = ref([])
-const selectedCart = ref(null)
+const selectedCart = ref(route.params.id)
+
 
 const formatCurrency = (val) =>
   new Intl.NumberFormat('id-ID', {
@@ -73,14 +77,14 @@ const fetchProducts = async () => {
 }
 
 // Fetch keranjang 
-const fetchCart = async () => {
-  try {
-    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/transaksicart/cart?transaction_type=${mode.value}&status=DRAFT`)
-    cart.value = res.data.data.items || []
-  } catch (error) {
-    console.error('Gagal fetch cart:', error)
-  }
-}
+// const fetchCart = async () => {
+//   try {
+//     const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/laporan/nota_penjualan/${selectedCart.value}`)
+//     cart.value = res.data.data.items || []
+//   } catch (error) {
+//     console.error('Gagal fetch cart:', error)
+//   }
+// }
 
 // Create Cart
 const handdleAddCart = async (id) => {
@@ -90,7 +94,7 @@ const handdleAddCart = async (id) => {
         "transaction_type": mode.value,
         "status": "DRAFT"
     })
-    fetchCart()
+    // fetchCart()
     // console.log(res.data.data.items)
   } catch (error) {
     console.error('Gagal fetch detail keranjang:', error)
@@ -100,10 +104,9 @@ const handdleAddCart = async (id) => {
 // Detail Cart
 const handdleDetailCart = async (id) => {
   try {
-    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/transaksicart/cart/${id}/item`)
-    detailcart.value = res.data.data.items || []
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/laporan/nota_penjualan/${id}`)
+    detailcart.value = res.data.data.items.detail_penjualan || []
     selectedCart.value = id
-    console.log(id)
   } catch (error) {
     console.error('Gagal fetch detail keranjang:', error)
   }
@@ -136,14 +139,16 @@ const handleAddProduct = async (product) => {
 const handleUpdateItem = async (item) => {
   try {
     console.log(item)
-    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/transaksicart/cart/items/${item.id}`, {
-      "product_id": item.product_id,
+    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/transaksi/${mode.value}/${item.id}`, {
+      "product_id": item.idbarang,
       "warehouse_id": 1,
       "quantity": item.quantity,
       "unit_price": item.unit_price,
       "discount": item.discount,
       "tax": item.tax,
       "notes": "Barang promo",
+      "nobatch": item.batch,
+      "expired": item.expired,
       "_method": "put"
     })
   } catch (e) {
@@ -200,7 +205,9 @@ const handleCheckout = async ({ tunai, nontunai, total, kembalian }) => {
       quantity: item.quantity,
       unit_price: item.unit_price,
       discount: item.discount || 0,
-      notes: item.notes || ''
+      notes: item.notes || '',
+      nobatch: item.batch,
+      expired: item.expired
     }))
     console.log('Items to checkout:', items)
 
@@ -232,12 +239,12 @@ const handleCheckout = async ({ tunai, nontunai, total, kembalian }) => {
 
     let data = {
       "transactionCartId": selectedCart.value,
-      "reference_code": null,
+      "reference_code": '',
       "transaction_type": mode.value,
       "date": moment().format('YYYY-MM-DD HH:mm:ss'),
       "created_by": 1,
-      "status": "PENDING",
-      "payment_status": "UNPAID",
+      "status": "CONFIRMED",
+      "payment_status": "PAID",
       "items": items,
       "payment": payment,
       "payment_methods": paymentMethods
@@ -259,12 +266,14 @@ const setupPage = () => {
   mode.value = route.meta.transactionType || 'SALE'
   title.value = route.meta.title || 'Transaksi'
   fetchProducts()
-  fetchCart()
-  detailcart.value = []
-  selectedCart.value = null
+  // fetchCart()
 }
 
-onMounted(setupPage)
+onMounted(()=>{
+  setupPage()
+  handdleDetailCart(selectedCart.value)
+  
+})
 
 watch(() => route.fullPath, setupPage)
 

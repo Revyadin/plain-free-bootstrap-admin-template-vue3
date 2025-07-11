@@ -4,7 +4,8 @@
 
     <!-- TABEL PRODUK -->
     <div class="table-responsive">
-      <table class="table sell-order-table table-sm text-sm">
+      <!-- Tabel untuk SALE -->
+      <table class="table sell-order-table table-sm text-sm" v-if="mode === 'SALE'">
         <thead>
           <tr>
             <th><h6 class="text-sm fw-500">Produk</h6></th>
@@ -18,23 +19,62 @@
           <tr v-if="localItems.length === 0">
             <td colspan="5" class="text-center text-sm text-gray">Belum ada produk ditambahkan.</td>
           </tr>
-          <tr v-for="item in localItems" :key="item.idbarang" style="border-bottom: 1px solid #dee2e6;">
+          <tr v-for="item in localItems" :key="item.idbarang">
             <td>{{ item.namabarang }}</td>
             <td>
-              <input type="number"
-                     class="form-control form-control-sm"
-                     v-model.number="item.quantity"
-                     min="1"
-                     style="width: 70px;"
-                     @change="onUpdate(item)" />
+              <input type="number" class="form-control form-control-sm" v-model.number="item.quantity" min="1" style="width: 70px;" @change="onUpdate(item)" />
             </td>
             <td>
-              <input type="number"
-                     class="form-control form-control-sm"
-                     v-model.number="item.discount"
-                     min="0" max="100"
-                     style="width: 60px;"
-                     @change="onUpdate(item)" />
+              <input type="number" class="form-control form-control-sm" v-model.number="item.discount" min="0" max="100" style="width: 60px;" @change="onUpdate(item)" />
+            </td>
+            <td class="text-end">
+              <p class="text-sm fw-500 text-gray">{{ formatCurrency(hitungTotalItem(item)) }}</p>
+            </td>
+            <td>
+              <button class="btn btn-xs btn-danger" @click="$emit('delete', item)">✕</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Tabel untuk PURCHASE dan CONFIRM_PURCHASE -->
+      <table class="table sell-order-table table-sm text-sm" v-if="['CONFIRM_PURCHASE', 'PURCHASE'].includes(mode)">
+        <thead>
+          <tr>
+            <th><h6 class="text-sm fw-500">Produk</h6></th>
+            <th><h6 class="text-sm fw-500">Jumlah</h6></th>
+            <th><h6 class="text-sm fw-500">Pot. %</h6></th>
+            <th><h6 class="text-sm fw-500">Pajak %</h6></th>
+            <th><h6 class="text-sm fw-500">Harga Pokok</h6></th>
+            <th v-if="mode === 'CONFIRM_PURCHASE'"><h6 class="text-sm fw-500">Batch</h6></th>
+            <th v-if="mode === 'CONFIRM_PURCHASE'"><h6 class="text-sm fw-500">Kadaluarsa</h6></th>
+            <th class="text-end"><h6 class="text-sm fw-500">Total</h6></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-if="localItems.length === 0">
+            <td :colspan="mode === 'CONFIRM_PURCHASE' ? 9 : 7" class="text-center text-sm text-gray">Belum ada produk ditambahkan.</td>
+          </tr>
+          <tr v-for="item in localItems" :key="item.idbarang">
+            <td>{{ item.namabarang }}</td>
+            <td>
+              <input type="number" class="form-control form-control-sm" v-model.number="item.quantity" min="1" style="width: 70px;" @change="onUpdate(item)" />
+            </td>
+            <td>
+              <input type="number" class="form-control form-control-sm" v-model.number="item.discount" min="0" max="100" style="width: 60px;" @change="onUpdate(item)" />
+            </td>
+            <td>
+              <input type="number" class="form-control form-control-sm" v-model.number="item.tax" min="0" max="100" style="width: 60px;" @change="onUpdate(item)" />
+            </td>
+            <td>
+              <input type="number" class="form-control form-control-sm" v-model.number="item.unit_price" min="0" style="width: 100px;" @change="onUpdate(item)" />
+            </td>
+            <td v-if="mode === 'CONFIRM_PURCHASE'">
+              <input type="text" class="form-control form-control-sm" v-model="item.batch" @change="onUpdate(item)" />
+            </td>
+            <td v-if="mode === 'CONFIRM_PURCHASE'">
+              <input type="date" class="form-control form-control-sm" v-model="item.expired" @change="onUpdate(item)" />
             </td>
             <td class="text-end">
               <p class="text-sm fw-500 text-gray">{{ formatCurrency(hitungTotalItem(item)) }}</p>
@@ -78,10 +118,8 @@
 
       <!-- BUTTON CHECKOUT -->
       <div class="text-end">
-        <button class="btn btn-success btn-sm"
-                @click="checkout"
-                :disabled="bayarTunai + bayarNonTunai < totalBayar">
-          Checkout
+        <button class="btn btn-success btn-sm" @click="checkout" :disabled="bayarTunai + bayarNonTunai < totalBayar">
+          {{label}}
         </button>
       </div>
     </div>
@@ -90,26 +128,31 @@
   </div>
 </template>
 
+
 <script setup>
 import { ref, watch, computed } from 'vue'
-import Swal from 'sweetalert2'
-import axios from 'axios'
 
 const props = defineProps({
-  items: Array
+  items: Array,
+  mode: String
 })
 
-const emit = defineEmits([
-  'update:items', 
-  'update', 
-  'delete', 
-  'refresh',
-  'checkout' // tambahkan ini
-])
+const label = computed(() => {
+  switch (props.mode) {
+    case 'SALE':
+      return 'Checkout Penjualan'
+    case 'PURCHASE':
+      return 'Konfirmasi Pembelian'
+    case 'CONFIRM_PURCHASE':
+      return 'Checkout Penerimaan'
+    default:
+      return 'Checkout'
+  }
+})
 
+const emit = defineEmits(['update:items', 'update', 'delete', 'refresh', 'checkout'])
 
 const localItems = ref([...props.items])
-
 watch(() => props.items, (val) => {
   localItems.value = [...val]
 })
@@ -119,7 +162,6 @@ const onUpdate = (item) => {
   emit('update:items', localItems.value)
 }
 
-// Format uang
 const formatCurrency = (val) =>
   new Intl.NumberFormat('id-ID', {
     style: 'currency',
@@ -127,26 +169,33 @@ const formatCurrency = (val) =>
     minimumFractionDigits: 0
   }).format(val)
 
-// Hitung total item
 const hitungTotalItem = (item) => {
-  const hargaTotal = item.unit_price * item.quantity
-  const potongan = (item.discount || 0) / 100 * hargaTotal
-  return hargaTotal - potongan
+  const subtotal = item.unit_price * item.quantity
+  const diskon = (item.discount || 0) / 100 * subtotal
+  const setelahDiskon = subtotal - diskon
+  const pajak = (item.tax || 0) / 100 * setelahDiskon
+  return props.mode === 'PURCHASE' || props.mode === 'CONFIRM_PURCHASE' ? setelahDiskon + pajak : setelahDiskon
 }
 
-// Computed grand total
 const grandTotal = computed(() =>
-  localItems.value.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0)
+  localItems.value.reduce((sum, item) => {
+    const subtotal = item.unit_price * item.quantity
+    const diskon = (item.discount || 0) / 100 * subtotal
+    const pajak = (item.tax || 0) / 100 * (subtotal - diskon)
+    return sum + (props.mode === 'PURCHASE' || props.mode === 'CONFIRM_PURCHASE'
+      ? subtotal - diskon + pajak
+      : subtotal)
+  }, 0)
 )
 
 const totalDiskon = computed(() =>
   localItems.value.reduce((sum, item) => {
-    const diskon = (item.discount || 0) / 100 * (item.unit_price * item.quantity)
-    return sum + diskon
+    const subtotal = item.unit_price * item.quantity
+    return sum + ((item.discount || 0) / 100 * subtotal)
   }, 0)
 )
 
-const totalBayar = computed(() => grandTotal.value - totalDiskon.value)
+const totalBayar = computed(() => grandTotal.value)
 
 const bayarTunai = ref(0)
 const bayarNonTunai = ref(0)
@@ -156,7 +205,6 @@ const kembalian = computed(() => {
   return totalDibayar - totalBayar.value
 })
 
-// Checkout logic
 const checkout = () => {
   emit('checkout', {
     tunai: bayarTunai.value,
@@ -165,5 +213,5 @@ const checkout = () => {
     kembalian: kembalian.value
   })
 }
-
 </script>
+

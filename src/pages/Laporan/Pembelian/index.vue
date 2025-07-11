@@ -29,9 +29,9 @@ import LaporanTable from '@/components/laporan/LaporanTable.vue'
 import LaporanDetail from '@/components/laporan/LaporanDetail.vue'
 
 const route = useRoute()
-const title = 'Laporan Penjualan'
+const title = 'Laporan Pembelian'
 
-const apiBase = `${import.meta.env.VITE_API_BASE_URL}/laporan/SALE`
+const apiBase = `${import.meta.env.VITE_API_BASE_URL}/laporan/PURCHASE?status=CONFIRMED&payment_status=PAID`
 const primaryKey = 'reference_code'
 
 const columns = [

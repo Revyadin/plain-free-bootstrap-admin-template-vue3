@@ -37,7 +37,7 @@
             </td>
             <td style="border-bottom: 1px solid #dee2e6;" class="text-end">
               <button
-                v-if="product.current_quantity > 0"
+                v-if="product.is_disable == 0"
                 class="btn btn-xs btn-outline-primary"
                 @click="$emit('add', product)"
               >

@@ -30,16 +30,19 @@
 
           <!-- Date Range -->
           <div class="d-flex align-items-center gap-2">
-            <label class="mb-0 text-sm">Mulai:</label>
-            <input type="date" v-model="dateStart" class="form-control form-control-sm" />
-
-            <label class="mb-0 text-sm">Sampai:</label>
-            <input type="date" v-model="dateEnd" class="form-control form-control-sm" />
+            <div class="d-flex flex-column">
+              <label class="text-sm mb-1">Mulai</label>
+              <input type="date" v-model="dateStart" class="form-control form-control-sm" />
+            </div>
+            <div class="d-flex flex-column">
+              <label class="text-sm mb-1">Sampai</label>
+              <input type="date" v-model="dateEnd" class="form-control form-control-sm" />
+            </div>
           </div>
 
           <!-- Export Buttons -->
           <div class="d-flex align-items-center gap-2">
-            <p>Show {{ pagination.limit }} entries</p>
+            <p class="mb-0 text-sm">Show {{ pagination.limit }} entries</p>
             <button class="btn btn-sm btn-outline-success" @click="exportExcel">
               <i class="lni lni-exit"></i> Excel
             </button>
@@ -48,6 +51,7 @@
             </button>
           </div>
         </div>
+
 
 
 
@@ -64,8 +68,14 @@
             <tbody>
               <tr v-for="(item, index) in items" :key="index">
                 <td v-for="col in columns" :key="col.key">
-                  {{ item[col.key] }}
+                  <span v-if="['total_paid', 'change_returned'].includes(col.key)">
+                    {{ formatCurrency(item[col.key]) }}
+                  </span>
+                  <span v-else>
+                    {{ item[col.key] }}
+                  </span>
                 </td>
+
                 <td>
                   <div class="d-flex gap-2">
                     <button @click="handleDetail(item[props.primaryKey])" class="btn btn-sm btn-outline-primary">
@@ -137,6 +147,8 @@ const props = defineProps({
     default: 'id'
   }
 })
+
+const emit = defineEmits(['detail'])
 
 // Tools
 const route = useRoute()
@@ -231,9 +243,17 @@ const goToPage = (page) => {
   fetchData()
 }
 
-// Detail
 const handleDetail = (id) => {
-  router.push(`${route.path.replace(/\/$/, '')}/${id}`)
+  // console.log(id)
+  // router.push(`/laporan/penjualan/${id}`)
+  emit('detail', id)
 }
-</script>
 
+const formatCurrency = (val) =>
+  new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0
+  }).format(val || 0)
+
+</script>

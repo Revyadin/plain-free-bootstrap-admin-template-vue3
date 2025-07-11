@@ -8,10 +8,11 @@
       :api-base="apiBase"
       :insert-path="`/laporan/penjualan/insert`"
       :primary-key="primaryKey"
+      @detail="handleDetail"
     />
 
     <!-- ✅ Tampilkan detail jika segment ID valid -->
-    <LaporanDetail
+    <Detail
       v-else
       :id="lastSegment"
       :title="title"
@@ -23,15 +24,16 @@
 </template>
 
 <script setup>
-import { useRoute } from 'vue-router'
-import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { computed, onMounted } from 'vue'
 import LaporanTable from '@/components/laporan/LaporanTable.vue'
-import LaporanDetail from '@/components/laporan/LaporanDetail.vue'
+import Detail from './detail.vue'
 
 const route = useRoute()
-const title = 'Laporan Penjualan'
+const router = useRouter()
+const title = 'Penerimaan Pembelian'
 
-const apiBase = `${import.meta.env.VITE_API_BASE_URL}/laporan/SALE`
+const apiBase = `${import.meta.env.VITE_API_BASE_URL}/laporan/PURCHASE?status=PENDING&payment_status=UNPAID`
 const primaryKey = 'reference_code'
 
 const columns = [
@@ -49,7 +51,11 @@ const lastSegment = computed(() => {
   return segments.length > 0 ? segments[segments.length - 1] : ''
 })
 
-// ✅ Deteksi apakah halaman detail berdasarkan pola ID nota
-const isDetailPage = computed(() => lastSegment.value.length >= 10) // contoh SE-xxx... minimal panjang ID
+// // ✅ Deteksi apakah halaman detail berdasarkan pola ID nota
+const isDetailPage = computed(() => /^PO-\w{6,}$/.test(lastSegment.value))
 
+const handleDetail = (id) => {
+  console.log(id)
+  router.push(`/penerimaan-pembelian/${id}`)
+}
 </script>

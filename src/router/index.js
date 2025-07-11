@@ -12,7 +12,11 @@ const Supplier = () => import('../pages/Supplier/index.vue')
 const Users = () => import('../pages/Users/index.vue')
 const Products = () => import('../pages/Products/index.vue')
 const LaporanPenjualan = () => import('../pages/Laporan/Penjualan/index.vue')
-
+const LaporanPembelian = () => import ('../pages/Laporan/Pembelian/index.vue')
+const Penerimaan = () => import ('../pages/Penerimaan/index.vue')
+const DetailPenerimaan = () => import ('../pages/Penerimaan/detail.vue')
+const NotFound = () => import ('../pages/Notfound/index.vue')
+const PengaturanUmum = () => import ('../pages/Pengaturan/index.vue')
 const routes = [
   // --- Auth Layout (Tanpa Sidebar/Topbar)
   {
@@ -60,6 +64,17 @@ const routes = [
       layout: 'default',
       requiresAuth: true,
       transactionType: 'SALE'
+    }
+  },
+  {
+    path: '/pembelian',
+    name: 'Pembelian',
+    component: Transaksi,
+    meta: {
+      title: 'Pembelian',
+      layout: 'default',
+      requiresAuth: true,
+      transactionType: 'PURCHASE'
     }
   },
 
@@ -212,11 +227,71 @@ const routes = [
       requiresAuth: true
     }
   },
+  {
+    path: '/laporan/pembelian',
+    name: 'LaporanPembelian',
+    component: LaporanPembelian,
+    meta: {
+      title: 'Laporan Pembelian',
+      layout: 'default',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/laporan/pembelian/:id',
+    name: 'DetailLaporanPembelian',
+    component: LaporanPembelian,
+    meta: {
+      title: 'Detail Pembelian',
+      layout: 'default',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/penerimaan-pembelian',
+    name: 'Penerimaan Pembelian',
+    component: Penerimaan,
+    meta: {
+      title: 'Tabel Penerimaan',
+      layout: 'default',
+      requiresAuth: true,
+      transactionType: 'CONFIRM_PURCHASE'
+    }
+  },
+  {
+    path: '/penerimaan-pembelian/:id',
+    name: 'Detail Penerimaan Pembelian',
+    component: DetailPenerimaan,
+    meta: {
+      title: 'Tabel Detail Penerimaan',
+      layout: 'default',
+      requiresAuth: true,
+      transactionType: 'CONFIRM_PURCHASE'
+    }
+  },
+
+  {
+    path: '/pengaturan-umum',
+    name: 'Pengaturan Umum',
+    component: PengaturanUmum,
+    meta: {
+      title: 'Pengaturan Umum',
+      layout: 'default',
+      requiresAuth: true
+    }
+  },
+
+  {
+    path: '/404',
+    name: 'Not Found',
+    component: NotFound
+  },
+
 
   // Fallback
   {
     path: '/:catchAll(.*)',
-    redirect: '/dashboard'
+    redirect: '/404'
   }
 ]
 
